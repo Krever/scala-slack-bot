@@ -50,7 +50,7 @@ Resources:
                   'body': challenge_answer
               }
       Handler: index.lambda_handler
-      Runtime: nodejs18.x
+      Runtime: python3.8
       Environment:
         Variables:
           BOT_TOKEN: !Ref BotToken

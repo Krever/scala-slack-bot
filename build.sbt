@@ -1,44 +1,45 @@
-enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin, UniversalPlugin)
+import org.scalajs.jsenv.nodejs.NodeJSEnv
 
-name := "lambda"
+ThisBuild / scalaVersion := "3.3.0"
 
-scalaVersion := "3.3.0"
-scalacOptions ++= Seq(
-    "-deprecation",
-    "-encoding", "UTF-8",
-    "-explaintypes", // Explain type errors in more detail.
-    "-feature", // Warn when we use advanced language features
-    "-unchecked", // Give more information on type erasure warning
-) 
-//version in webpack := "4.16.1"
-//useYarn := true
-webpackConfigFile := Some(baseDirectory.value / "webpack.config.js")
-//version in startWebpackDevServer := "3.1.4"
+val root = (project in file("."))
+  .settings(
+    name              := "lambda",
+    scalacOptions ++= Seq(
+      "-deprecation",
+      "-encoding",
+      "UTF-8",
+      "-explaintypes", // Explain type errors in more detail.
+      "-feature",      // Warn when we use advanced language features
+      "-unchecked",    // Give more information on type erasure warning
+    ),
+    webpackConfigFile := Some(baseDirectory.value / "webpack.config.js"),
+    libraryDependencies ++= Seq(
+      // Include type definition for aws lambda handlers
+      "net.exoego"   %%% "aws-lambda-scalajs-facade" % "0.12.1",
+      "org.typelevel" %% "cats-effect"               % "3.5.1",
+    ),
+    // Package lambda as a zip. Use `universal:packageBin` to create the zip
+    topLevelDirectory := None,
+    Universal / mappings ++= (Compile / fullOptJS / webpack).value.map { f =>
+      // remove the bundler suffix from the file names
+      f.data -> f.data.getName.replace("-opt-bundle", "")
+    },
+  )
+  .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin, UniversalPlugin)
 
-// Optional: Disable source maps to speed up compile times
-scalaJSLinkerConfig ~= { _.withSourceMap(false) }
-
-// Incluce type defintion for aws lambda handlers
-libraryDependencies += "net.exoego" %%% "aws-lambda-scalajs-facade" % "0.12.1"
-
-// Optional: Include the AWS SDK as a dep
-/*
-val awsSdkVersion = "2.596.0"
-val awsSdkScalajsFacadeVersion = s"0.28.0-v${awsSdkVersion}"
-libraryDependencies += "net.exoego" %%% "aws-sdk-scalajs-facade-dynamodb" % awsSdkScalajsFacadeVersion
-libraryDependencies += "net.exoego" %%% "aws-sdk-scalajs-facade-s3" % awsSdkScalajsFacadeVersion
-npmDependencies in Compile += "aws-sdk" -> awsSdkVersion
-*/
- 
-// Optional: Include some nodejs types (useful for, say, accessing the env)
-//libraryDependencies += "net.exoego" %%% "scala-js-nodejs-v12" % "0.9.1"
-
-// Include scalatest
-//libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.1" % "test"
-
-// Package lambda as a zip. Use `universal:packageBin` to create the zip
-topLevelDirectory := None
-mappings in Universal ++= (webpack in (Compile, fullOptJS)).value.map { f =>
-  // remove the bundler suffix from the file names
-  f.data -> f.data.getName().replace("-opt-bundle", "")
-}
+val `local-run` = project
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.http4s" %%% "http4s-ember-server" % "0.23.22",
+      "org.http4s" %%% "http4s-dsl"          % "0.23.22",
+    ),
+    scalaJSUseMainModuleInitializer := true,
+    // ECMAScript
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
+    // CommonJS
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
+    jsEnv := new NodeJSEnv(NodeJSEnv.Config().withSourceMap(true).withArgs(List("--inspect")))
+  )
+  .dependsOn(root)
+  .enablePlugins(ScalaJSPlugin)
