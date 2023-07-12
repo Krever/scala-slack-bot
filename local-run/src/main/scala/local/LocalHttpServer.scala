@@ -4,14 +4,13 @@ import cats.effect.{IO, IOApp}
 import cats.syntax.all.*
 import com.comcast.ip4s.*
 import fs2.io.net.Network
-import net.exoego.facade.aws_lambda.APIGatewayProxyResult
 import org.http4s.dsl.Http4sDsl
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.implicits.*
 import org.http4s.server.middleware.{ErrorAction, ErrorHandling, Logger}
 import org.http4s.{Http, HttpRoutes, Request, Response, Status}
 import org.slf4j.LoggerFactory
-import slackBotLambda.{Handler, SlackEvent}
+import slackBotLambda.Handler
 
 object LocalHttpServer extends IOApp.Simple {
   val run = runServer
@@ -36,23 +35,17 @@ object LocalHttpServer extends IOApp.Simple {
       case req @ GET -> Root / "lambda" =>
         for {
           input  <- requestToLambdaInput(req)
-          result <- Handler.main(input)
+          result <- Handler.run(input)
         } yield lambdaOutputToResponse(result)
 
     }
   }
 
-  private def requestToLambdaInput(req: Request[IO]): IO[SlackEvent] = {
-    for {
-      strBody <- req.as[String]
-    } yield new SlackEvent {
-      override val body: String = strBody
-    }
-  }
+  private def requestToLambdaInput(req: Request[IO]): IO[Handler.Input] = req.as[String].map(Handler.Input.apply)
 
-  private def lambdaOutputToResponse(resp: APIGatewayProxyResult): Response[IO] = {
+  private def lambdaOutputToResponse(resp: Handler.Output): Response[IO] = {
     println(resp)
-    Response(Status(resp.statusCode.toInt))
+    Response(Status(resp.code))
       .withEntity(resp.body)
   }
 

@@ -7,6 +7,7 @@
 - [Yris-ops/slack-bot-aws-lambda](https://github.com/Yris-ops/slack-bot-aws-lambda)
 - [bgahagan/scalajs-lambda.g8](https://github.com/bgahagan/scalajs-lambda.g8)
 - [How to Create a Slack Bot using AWS Lambda in < 1 Hour](https://medium.com/glasswall-engineering/how-to-create-a-slack-bot-using-aws-lambda-in-1-hour-1dbc1b6f021c)
+- https://github.com/typelevel/feral
 
 ## Run locally
 
@@ -18,12 +19,26 @@ sbt fastOptJS::webpack
 curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{"payload":"hello world!"}'
 ```
 
-### Through scalajs local server
+### Through local server - scala.js
 This will expose your lambda through an http endpoint served by http4s on nodejs.
 
 ```
-sbt local-run/run
+# npm install source-map-support
+
+sbt local-runJS/run
+
 ## nodejs debugger available on port 9229. It's compatible with Intellij "Attach to Node.js/Chrome" debug option
+```
+
+### Through local server - JVM
+This will expose your lambda through an http endpoint served by http4s on JVM.
+
+```
+# npm install source-map-support
+
+sbt local-runJVM/reStart
+
+## JVM debugger available on port 5005. It's compatible with Intellij "Remote JVM Debug" debug option
 ```
 
 ### Alternatives

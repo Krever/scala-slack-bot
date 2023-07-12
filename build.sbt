@@ -2,9 +2,12 @@ import org.scalajs.jsenv.nodejs.NodeJSEnv
 
 ThisBuild / scalaVersion := "3.3.0"
 
-val root = (project in file("."))
+val lambda = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("lambda"))
+  .enablePlugins(UniversalPlugin)
   .settings(
-    name              := "lambda",
+    name := "lambda",
     scalacOptions ++= Seq(
       "-deprecation",
       "-encoding",
@@ -13,33 +16,43 @@ val root = (project in file("."))
       "-feature",      // Warn when we use advanced language features
       "-unchecked",    // Give more information on type erasure warning
     ),
-    webpackConfigFile := Some(baseDirectory.value / "webpack.config.js"),
     libraryDependencies ++= Seq(
-      // Include type definition for aws lambda handlers
-      "net.exoego"   %%% "aws-lambda-scalajs-facade" % "0.12.1",
-      "org.typelevel" %% "cats-effect"               % "3.5.1",
+      "org.typelevel" %%% "cats-effect"               % "3.5.1",
     ),
+  )
+  .jsSettings(
+    webpackConfigFile := Some(baseDirectory.value / "webpack.config.js"),
     // Package lambda as a zip. Use `universal:packageBin` to create the zip
     topLevelDirectory := None,
     Universal / mappings ++= (Compile / fullOptJS / webpack).value.map { f =>
       // remove the bundler suffix from the file names
       f.data -> f.data.getName.replace("-opt-bundle", "")
     },
+    libraryDependencies ++= Seq(
+      // Include type definition for aws lambda handlers
+      "net.exoego" %%% "aws-lambda-scalajs-facade" % "0.12.1",
+    ),
   )
-  .enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin, UniversalPlugin)
+  .jsConfigure(_.enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin))
 
-val `local-run` = project
+val `local-run` = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .dependsOn(lambda)
   .settings(
     libraryDependencies ++= Seq(
       "org.http4s" %%% "http4s-ember-server" % "0.23.22",
       "org.http4s" %%% "http4s-dsl"          % "0.23.22",
     ),
-    scalaJSUseMainModuleInitializer := true,
-    // ECMAScript
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
-    // CommonJS
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
-    jsEnv := new NodeJSEnv(NodeJSEnv.Config().withSourceMap(true).withArgs(List("--inspect")))
   )
-  .dependsOn(root)
-  .enablePlugins(ScalaJSPlugin)
+  .jsSettings(
+    scalaJSUseMainModuleInitializer := true,
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule)},
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
+    jsEnv                           := new NodeJSEnv(
+      NodeJSEnv
+        .Config()
+        .withSourceMap(true) // debugger will be able to navigate to scalajs code
+        .withArgs(List("--inspect")), // enables remote debugged
+    ),
+  )
+  .jvmSettings(Revolver.enableDebugging())
