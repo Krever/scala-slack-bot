@@ -17,7 +17,10 @@ val lambda = crossProject(JSPlatform, JVMPlatform)
       "-unchecked",    // Give more information on type erasure warning
     ),
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-effect"               % "3.5.1",
+      "org.typelevel"                 %%% "cats-effect" % "3.5.1",
+      "com.softwaremill.sttp.client3" %%% "core"        % "3.8.16",
+      "com.outr"                      %%% "scribe"      % "3.11.8",
+      "com.lihaoyi"                   %%% "upickle"     % "3.1.2",
     ),
   )
   .jsSettings(
@@ -46,13 +49,18 @@ val `local-run` = crossProject(JSPlatform, JVMPlatform)
   )
   .jsSettings(
     scalaJSUseMainModuleInitializer := true,
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule)},
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
     jsEnv                           := new NodeJSEnv(
       NodeJSEnv
         .Config()
-        .withSourceMap(true) // debugger will be able to navigate to scalajs code
-        .withArgs(List("--inspect")), // enables remote debugged
+        .withSourceMap(true)         // debugger will be able to navigate to scalajs code
+        .withArgs(List("--inspect")),// enables remote debugged
     ),
   )
-  .jvmSettings(Revolver.enableDebugging())
+  .jvmSettings(
+    Revolver.enableDebugging(),
+    libraryDependencies ++= Seq(
+      "ch.qos.logback" % "logback-classic" % "1.4.7" % Runtime,
+    ),
+  )

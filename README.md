@@ -19,8 +19,10 @@ sbt fastOptJS::webpack
 curl -XPOST "http://localhost:9000/2015-03-31/functions/function/invocations" -d '{"payload":"hello world!"}'
 ```
 
-### Through local server - scala.js
-This will expose your lambda through an http endpoint served by http4s on nodejs.
+### Through local server
+This will expose your lambda through a custom http endpoint served by http4s.
+
+#### Scala.js
 
 ```
 # npm install source-map-support
@@ -30,8 +32,7 @@ sbt local-runJS/run
 ## nodejs debugger available on port 9229. It's compatible with Intellij "Attach to Node.js/Chrome" debug option
 ```
 
-### Through local server - JVM
-This will expose your lambda through an http endpoint served by http4s on JVM.
+#### JVM
 
 ```
 # npm install source-map-support
@@ -41,9 +42,21 @@ sbt local-runJVM/reStart
 ## JVM debugger available on port 5005. It's compatible with Intellij "Remote JVM Debug" debug option
 ```
 
+#### Ngrok
+
+Slack requires https traffic and current server implementation exposes only http endpoint. 
+So you can't simply expose the port on your router. Instead, we will use ngrok to create an http proxy
+
+```
+ngrok http 8080
+
+# public url will be shown in the terminal. Alternatively you can get it with
+curl -s localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url'
+```
+
 ### Alternatives
 
 This bot can be deployed to localstack but with significant limitations:
 
-* `AWS::ApiGatewayV2::Api` recource is not supported in localstack community edition, so this part has to be done
-  separately (outside fo cloud formation)
+* `AWS::ApiGatewayV2::Api` recource is not supported in localstack community edition, so this part would have to be done
+  separately (outside of cloud formation)
