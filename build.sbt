@@ -18,13 +18,13 @@ val lambda = crossProject(JSPlatform, JVMPlatform)
     ),
     libraryDependencies ++= Seq(
       "org.typelevel"                 %%% "cats-effect" % "3.5.1",
-      "com.softwaremill.sttp.client3" %%% "core"        % "3.8.16",
+      "com.softwaremill.sttp.client4" %%% "core" % "4.0.0-M2",
       "com.outr"                      %%% "scribe"      % "3.11.8",
       "com.lihaoyi"                   %%% "upickle"     % "3.1.2",
     ),
   )
   .jsSettings(
-    webpackConfigFile := Some(baseDirectory.value / "webpack.config.js"),
+    webpackConfigFile := Some(baseDirectory.value / ".." / ".." / "webpack.config.js"),
     // Package lambda as a zip. Use `universal:packageBin` to create the zip
     topLevelDirectory := None,
     Universal / mappings ++= (Compile / fullOptJS / webpack).value.map { f =>

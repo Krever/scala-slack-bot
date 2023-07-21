@@ -7,14 +7,10 @@ Parameters:
     Type: String
     Description: "The Slack bot token"
 
-  AccountNumber:
-    Type: String
-    Description: "The AWS account number"
-
   AppName:
     Description: Name of Application
     Type: String
-    Default: apigw-http-slack-lambda
+    Default: apigw-http-slack-scala-lambda
 
 Resources:
   MyFunctionRole:
@@ -37,23 +33,19 @@ Resources:
     Properties:
       Code:
         ZipFile: |
-          import json
-          def lambda_handler(event, context):
-              print(f"Received event:\n{event}\nWith context:\n{context}")
-          
-              slack_body = event.get("body")
-              slack_event = json.loads(slack_body)
-              challenge_answer = slack_event.get("challenge")
-          
-              return {
-                  'statusCode': 200,
-                  'body': challenge_answer
-              }
-      Handler: index.lambda_handler
-      Runtime: python3.8
+          exports.handler = async function (event, context) {
+            console.log("EVENT: \n" + JSON.stringify(event, null, 2));
+            return {
+                'statusCode': 200,
+                'body': 'Hey'
+            }
+          };
+
+      Handler: index.handler
+      Runtime: nodejs18.x
       Environment:
         Variables:
-          BOT_TOKEN: !Ref BotToken
+          SLACK_BOT_TOKEN: !Ref BotToken
       Role: !GetAtt MyFunctionRole.Arn
 
   FunctionResourcePermission:
