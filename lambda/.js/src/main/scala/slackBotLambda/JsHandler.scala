@@ -23,8 +23,8 @@ object JsHandler {
 
       val strBody = if(event.isBase64Encoded) new String(Base64.getDecoder.decode(event.body)) else event.body
 
-      Handler
-        .run(Handler.Input(strBody))
+      LambdaHandler
+        .run(LambdaHandler.Input(strBody))
         .map(out =>
           APIGatewayProxyResult(
             statusCode = out.code,

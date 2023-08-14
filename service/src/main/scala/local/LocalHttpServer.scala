@@ -9,7 +9,7 @@ import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.implicits.*
 import org.http4s.server.middleware.{ErrorAction, ErrorHandling, Logger}
 import org.http4s.{Http, HttpRoutes, Request, Response, Status}
-import slackBotLambda.Handler
+import slackBotLambda.LambdaHandler
 
 object LocalHttpServer extends IOApp.Simple {
   val run = runServer
@@ -18,8 +18,8 @@ object LocalHttpServer extends IOApp.Simple {
     EmberServerBuilder
       .default[IO]
       .withHost(ipv4"0.0.0.0")
-      .withPort(port"8080")
-      .withHttpApp(Logger.httpApp(true, true)(errorLogging(helloWorldRoutes.orNotFound)))
+      .withPort(port"9876")
+      .withHttpApp(Logger.httpApp(logHeaders = true, logBody = true)(errorLogging(helloWorldRoutes.orNotFound)))
       .build
       .void
       .useForever
@@ -33,15 +33,15 @@ object LocalHttpServer extends IOApp.Simple {
       case req @ POST -> Root / "lambda" =>
         for {
           input  <- requestToLambdaInput(req)
-          result <- Handler.run(input)
+          result <- LambdaHandler.run(input)
         } yield lambdaOutputToResponse(result)
 
     }
   }
 
-  private def requestToLambdaInput(req: Request[IO]): IO[Handler.Input] = req.as[String].map(Handler.Input.apply)
+  private def requestToLambdaInput(req: Request[IO]): IO[LambdaHandler.Input] = req.as[String].map(LambdaHandler.Input.apply)
 
-  private def lambdaOutputToResponse(resp: Handler.Output): Response[IO] = {
+  private def lambdaOutputToResponse(resp: LambdaHandler.Output): Response[IO] = {
     println(resp)
     Response(Status(resp.code))
       .withEntity(resp.body)

@@ -18,7 +18,7 @@ val lambda = crossProject(JSPlatform, JVMPlatform)
     ),
     libraryDependencies ++= Seq(
       "org.typelevel"                 %%% "cats-effect" % "3.5.1",
-      "com.softwaremill.sttp.client4" %%% "core" % "4.0.0-M2",
+      "com.softwaremill.sttp.client4" %%% "core"        % "4.0.0-M2",
       "com.outr"                      %%% "scribe"      % "3.11.8",
       "com.lihaoyi"                   %%% "upickle"     % "3.1.2",
     ),
@@ -38,7 +38,7 @@ val lambda = crossProject(JSPlatform, JVMPlatform)
   )
   .jsConfigure(_.enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin))
 
-val `local-run` = crossProject(JSPlatform, JVMPlatform)
+val `service` = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .dependsOn(lambda)
   .settings(
@@ -55,7 +55,7 @@ val `local-run` = crossProject(JSPlatform, JVMPlatform)
       NodeJSEnv
         .Config()
         .withSourceMap(true)         // debugger will be able to navigate to scalajs code
-        .withArgs(List("--inspect")),// enables remote debugged
+        .withArgs(List("--inspect")), // enables remote debugger
     ),
   )
   .jvmSettings(
@@ -64,3 +64,14 @@ val `local-run` = crossProject(JSPlatform, JVMPlatform)
       "ch.qos.logback" % "logback-classic" % "1.4.7" % Runtime,
     ),
   )
+  .jvmSettings(
+    dockerBaseImage := "openjdk:17",
+  )
+  .settings(
+    Docker / packageName := "scala-slack-bot",
+    dockerAliases        := Seq(
+      DockerAlias(Some("registry.fly.io"), None, "scala-slack-bot", Some("latest")),
+    ),
+    dockerBuildOptions ++= Seq("--platform", "linux/amd64"),
+  )
+  .enablePlugins(JavaServerAppPackaging, DockerPlugin)
