@@ -5,18 +5,13 @@ Description: 'Slack Bot using AWS Lambda & Scala'
 Parameters:
   BotToken:
     Type: String
-    Description: "The Slack bot token"
-
-  AppName:
-    Description: Name of Application
-    Type: String
-    Default: apigw-http-slack-scala-lambda
+    Description: "The Slack Bot Token"
 
 Resources:
   MyFunctionRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: SlackLambda-role
+      RoleName: ScalaSlackLambda-role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -31,17 +26,11 @@ Resources:
   MyFunction:
     Type: AWS::Lambda::Function
     Properties:
+      FunctionName: ScalaSlackLambda-lambda
       Code:
         ZipFile: |
-          exports.handler = async function (event, context) {
-            console.log("EVENT: \n" + JSON.stringify(event, null, 2));
-            return {
-                'statusCode': 200,
-                'body': 'Hey'
-            }
-          };
-
-      Handler: index.handler
+          dummy value to be replaced by proper upload
+      Handler: lambda.myJsHandler
       Runtime: nodejs18.x
       Environment:
         Variables:
@@ -59,7 +48,7 @@ Resources:
   HttpApi:
     Type: 'AWS::ApiGatewayV2::Api'
     Properties:
-      Name: !Ref AppName
+      Name: ScalaSlackLambda-http-api
       Description: An Amazon API Gateway HTTP API and an AWS Lambda function.
       ProtocolType: HTTP
       CorsConfiguration:

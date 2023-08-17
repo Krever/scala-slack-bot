@@ -1,10 +1,12 @@
- read -sp 'BotToken: ' bot_token
+#!/usr/bin/env bash
+set -xeuv
+
+ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
  aws cloudformation create-stack \
    --capabilities CAPABILITY_NAMED_IAM \
-   --stack-name 'scala-slack-lambda-example' \
-   --template-body file://resources/cf-stack.yaml \
-   --parameters ParameterKey=BotToken,ParameterValue=${bot_token}
+   --stack-name scala-slack-bot-lambda \
+   --template-body file://"${SCRIPT_DIR}"/../resources/cf-stack.yaml \
+   --parameters ParameterKey=BotToken,ParameterValue=${SLACK_BOT_TOKEN}
 
 
-aws cloudformation describe-stacks --stack-name 'scala-slack-lambda-example' | jq '.Stacks[0].Outputs'

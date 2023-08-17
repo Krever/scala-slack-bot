@@ -1,6 +1,6 @@
 {
   "display_information": {
-    "name": "${APP_NAME}"
+    "name": "Scala Slack Bot"
   },
   "features": {
     "app_home": {
@@ -9,7 +9,7 @@
       "messages_tab_read_only_enabled": false
     },
     "bot_user": {
-      "display_name": "Hello From Scala",
+      "display_name": "Scala Slack Bot",
       "always_online": false
     },
     "slash_commands": [

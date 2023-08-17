@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+set -xuev
+
 docker run \
   --rm \
   --platform linux/amd64 \

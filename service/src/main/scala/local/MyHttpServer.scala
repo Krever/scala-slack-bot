@@ -9,9 +9,9 @@ import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.implicits.*
 import org.http4s.server.middleware.{ErrorAction, ErrorHandling, Logger}
 import org.http4s.{Http, HttpRoutes, Request, Response, Status}
-import slackBotLambda.LambdaHandler
+import slackBotLambda.SlackHandler
 
-object LocalHttpServer extends IOApp.Simple {
+object MyHttpServer extends IOApp.Simple {
   val run = runServer
 
   def runServer: IO[Nothing] = {
@@ -19,13 +19,13 @@ object LocalHttpServer extends IOApp.Simple {
       .default[IO]
       .withHost(ipv4"0.0.0.0")
       .withPort(port"9876")
-      .withHttpApp(Logger.httpApp(logHeaders = true, logBody = true)(errorLogging(helloWorldRoutes.orNotFound)))
+      .withHttpApp(Logger.httpApp(logHeaders = true, logBody = true)(errorLogging(routes.orNotFound)))
       .build
       .void
       .useForever
   }
 
-  def helloWorldRoutes: HttpRoutes[IO] = {
+  private def routes: HttpRoutes[IO] = {
     val dsl = new Http4sDsl[IO] {}
     import dsl.*
     HttpRoutes.of[IO] {
@@ -33,18 +33,16 @@ object LocalHttpServer extends IOApp.Simple {
       case req @ POST -> Root / "lambda" =>
         for {
           input  <- requestToLambdaInput(req)
-          result <- LambdaHandler.run(input)
+          result <- SlackHandler.run(input)
         } yield lambdaOutputToResponse(result)
-
     }
   }
 
-  private def requestToLambdaInput(req: Request[IO]): IO[LambdaHandler.Input] = req.as[String].map(LambdaHandler.Input.apply)
+  private def requestToLambdaInput(req: Request[IO]): IO[SlackHandler.Input] =
+    req.as[String].map(SlackHandler.Input.apply)
 
-  private def lambdaOutputToResponse(resp: LambdaHandler.Output): Response[IO] = {
-    println(resp)
-    Response(Status(resp.code))
-      .withEntity(resp.body)
+  private def lambdaOutputToResponse(resp: SlackHandler.Output): Response[IO] = {
+    Response().withEntity(resp.body)
   }
 
   private def errorLogging(route: Http[IO, IO]): Http[IO, IO] = ErrorHandling.Recover.total(

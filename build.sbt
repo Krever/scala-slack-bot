@@ -2,43 +2,44 @@ import org.scalajs.jsenv.nodejs.NodeJSEnv
 
 ThisBuild / scalaVersion := "3.3.0"
 
-val lambda = crossProject(JSPlatform, JVMPlatform)
+lazy val root = project
+  .in(file("."))
+  .settings(name := "scala-slack-bot")
+  .aggregate(lambda.js, lambda.jvm, `service`.js, `service`.jvm)
+
+lazy val lambda = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .in(file("lambda"))
   .enablePlugins(UniversalPlugin)
   .settings(
-    name := "lambda",
-    scalacOptions ++= Seq(
-      "-deprecation",
-      "-encoding",
-      "UTF-8",
-      "-explaintypes", // Explain type errors in more detail.
-      "-feature",      // Warn when we use advanced language features
-      "-unchecked",    // Give more information on type erasure warning
-    ),
+    name              := "lambda",
     libraryDependencies ++= Seq(
       "org.typelevel"                 %%% "cats-effect" % "3.5.1",
       "com.softwaremill.sttp.client4" %%% "core"        % "4.0.0-M2",
       "com.outr"                      %%% "scribe"      % "3.11.8",
       "com.lihaoyi"                   %%% "upickle"     % "3.1.2",
     ),
+    topLevelDirectory := None,// required for AWS to accept the zip
   )
   .jsSettings(
     webpackConfigFile := Some(baseDirectory.value / ".." / ".." / "webpack.config.js"),
-    // Package lambda as a zip. Use `universal:packageBin` to create the zip
-    topLevelDirectory := None,
     Universal / mappings ++= (Compile / fullOptJS / webpack).value.map { f =>
-      // remove the bundler suffix from the file names
-      f.data -> f.data.getName.replace("-opt-bundle", "")
+      f.data -> f.data.getName.replace("-opt-bundle", "") // remove the bundler suffix from the file names
     },
     libraryDependencies ++= Seq(
-      // Include type definition for aws lambda handlers
-      "net.exoego" %%% "aws-lambda-scalajs-facade" % "0.12.1",
+      "net.exoego" %%% "aws-lambda-scalajs-facade" % "0.12.1", // type definitions for aws lambda handlers
     ),
   )
   .jsConfigure(_.enablePlugins(ScalaJSPlugin, ScalaJSBundlerPlugin))
+  .jvmSettings(
+    libraryDependencies ++= Seq(
+      "com.amazonaws" % "aws-lambda-java-core"   % "1.2.2",
+      "com.amazonaws" % "aws-lambda-java-events" % "3.11.2",
+    )
+  )
+  .jvmConfigure(_.enablePlugins(JavaAppPackaging))
 
-val `service` = crossProject(JSPlatform, JVMPlatform)
+lazy val `service` = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .dependsOn(lambda)
   .settings(
@@ -54,8 +55,8 @@ val `service` = crossProject(JSPlatform, JVMPlatform)
     jsEnv                           := new NodeJSEnv(
       NodeJSEnv
         .Config()
-        .withSourceMap(true)         // debugger will be able to navigate to scalajs code
-        .withArgs(List("--inspect")), // enables remote debugger
+        .withSourceMap(true) // debugger will be able to navigate to scalajs code
+        .withArgs(List("--inspect")),// enables remote debugger
     ),
   )
   .jvmSettings(
@@ -63,8 +64,6 @@ val `service` = crossProject(JSPlatform, JVMPlatform)
     libraryDependencies ++= Seq(
       "ch.qos.logback" % "logback-classic" % "1.4.7" % Runtime,
     ),
-  )
-  .jvmSettings(
     dockerBaseImage := "openjdk:17",
   )
   .settings(

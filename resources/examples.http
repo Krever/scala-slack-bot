@@ -1,0 +1,18 @@
+###
+
+GET localhost:9876/hello
+
+###
+
+POST localhost:9876/lambda
+
+user_id=XXX
+
+###
+
+POST localhost:9876/2015-03-31/functions/function/invocations
+
+{
+  "body":"user_id=111",
+  "isBase64Encoded": false
+}
