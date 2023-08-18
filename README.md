@@ -1,7 +1,7 @@
 # Scala Slack Bot Example
 
 The goal of this repository is showcase how to build and _deploy_ a simple slack bot in scala.
-It focuses on composing existing pieces together while exploring deployment options and developer experience that come
+It focuses on composing existing pieces together while exploring deployment options and developer experience that comes
 with them.
 
 Checkout the [article](https://medium.com/@w.pitula/slack-bot-in-scala-and-12-ways-to-run-it-8b5f2d9f3524) for a proper tutorial.
