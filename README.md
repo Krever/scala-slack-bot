@@ -38,11 +38,10 @@ At the moment this repository supports the following run scenarios
             <th>Scala.js</th>
             <td rowspan="2">❌</td>
             <td>✅</td>
-            <td>✅ on AWS</td>
+            <td rowspan="2">✅ on AWS</td>
         </tr>
         <tr>
             <th>Scala JVM</th>
-            <td>✅</td>
             <td>✅</td>
         </tr>
     </tbody>
